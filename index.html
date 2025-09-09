@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kids Trivia Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', sans-serif;
+      background-color: #fef3c7;
+    }
+    .question-img {
+      max-width: 300px;
+      max-height: 200px;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .answer-btn {
+      transition: transform 0.1s;
+    }
+    .answer-btn:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+  <div class="bg-yellow-100 p-6 rounded-2xl shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center" id="game-title">Kids Trivia!</h1>
+
+    <!-- Theme override dropdown -->
+    <div class="mb-4 text-center">
+      <label for="theme-select" class="font-semibold mr-2">Choose Theme:</label>
+      <select id="theme-select" class="px-2 py-1 rounded-lg">
+        <option value="">--Auto Select--</option>
+        <!-- Animals & Nature -->
+        <option value="zoo_animals">Zoo Animals 🦁</option>
+        <option value="farm_animals">Farm Animals 🐷</option>
+        <option value="ocean_animals">Ocean Animals 🐠</option>
+        <option value="insects">Insects 🐞</option>
+        <option value="dinosaurs">Dinosaurs 🦖</option>
+        <option value="flowers_plants">Flowers & Plants 🌺</option>
+
+        <!-- Sports & Games -->
+        <option value="soccer">Soccer ⚽</option>
+        <option value="football">Football 🏈</option>
+        <option value="basketball">Basketball 🏀</option>
+        <option value="baseball">Baseball ⚾</option>
+        <option value="olympics">Olympics 🏅</option>
+        <option value="playground_games">Playground Games 🛝</option>
+
+        <!-- Seasonal & Holidays -->
+        <option value="halloween">Halloween 🎃</option>
+        <option value="christmas">Christmas 🎄</option>
+        <option value="valentine">Valentine ❤️</option>
+        <option value="easter">Easter 🐰</option>
+        <option value="summer">Summer ☀️</option>
+        <option value="winter">Winter ❄️</option>
+
+        <!-- Fun & Learning -->
+        <option value="space">Space 🌌</option>
+        <option value="colors">Colors 🌈</option>
+        <option value="shapes">Shapes 🔺</option>
+        <option value="numbers">Numbers 🔢</option>
+        <option value="letters">Letters 🅰️</option>
+        <option value="food">Food 🍎</option>
+
+        <!-- Miscellaneous & Interests -->
+        <option value="superheroes">Superheroes 🦸‍♂️</option>
+        <option value="vehicles">Vehicles 🚗</option>
+        <option value="pirates">Pirates 🏴‍☠️</option>
+        <option value="fairy_tales">Fairy Tales 🧚‍♀️</option>
+        <option value="ocean_beach">Ocean & Beach 🏖️</option>
+
+        <!-- Video games -->
+        <option value="mario">Mario 🍄</option>
+        <option value="pokemon">Pokémon ⚡</option>
+        <option value="minecraft">Minecraft ⛏️</option>
+        <option value="roblox">Roblox 🛠️</option>
+
+        <!-- General fallback -->
+        <option value="general">General 🎉</option>
+      </select>
+    </div>
+
+    <div id="question-container" class="text-center">
+      <img id="question-img" class="question-img mx-auto hidden" />
+      <p id="question-text" class="text-lg font-semibold mb-4"></p>
+      <div id="answers" class="flex flex-col gap-2"></div>
+    </div>
+    <div class="mt-4 text-center">
+      <p id="score" class="font-bold"></p>
+      <button id="next-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 hidden">Next Question</button>
+    </div>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentIndex = 0;
+    let score = 0;
+
+    const questionText = document.getElementById("question-text");
+    const questionImg = document.getElementById("question-img");
+    const answersContainer = document.getElementById("answers");
+    const nextBtn = document.getElementById("next-btn");
+    const scoreDisplay = document.getElementById("score");
+    const gameTitle = document.getElementById("game-title");
+    const themeSelect = document.getElementById("theme-select");
+
+    // Theme styles & emojis
+    const themeStyles = {
+      // Animals & Nature
+      zoo_animals: { emoji: "🦁", bg: "#fef3c7", btn: "#f59e0b" },
+      farm_animals: { emoji: "🐷", bg: "#fde68a", btn: "#fbbf24" },
+      ocean_animals: { emoji: "🐠", bg: "#bfdbfe", btn: "#3b82f6" },
+      insects: { emoji: "🐞", bg: "#bbf7d0", btn: "#22c55e" },
+      dinosaurs: { emoji: "🦖", bg: "#fca5a5", btn: "#f87171" },
+      flowers_plants: { emoji: "🌺", bg: "#fbcfe8", btn: "#f472b6" },
+
+      // Sports & Games
+      soccer: { emoji: "⚽", bg: "#fde68a", btn: "#f59e0b" },
+      football: { emoji: "🏈", bg: "#d1fae5", btn: "#10b981" },
+      basketball: { emoji: "🏀", bg: "#fde68a", btn: "#f59e0b" },
+      baseball: { emoji: "⚾", bg: "#bfdbfe", btn: "#3b82f6" },
+      olympics: { emoji: "🏅", bg: "#fcd34d", btn: "#f97316" },
+      playground_games: { emoji: "🛝", bg: "#bbf7d0", btn: "#22c55e" },
+
+      // Seasonal & Holidays
+      halloween: { emoji: "🎃", bg: "#fca5a5", btn: "#f87171" },
+      christmas: { emoji: "🎄", bg: "#bbf7d0", btn: "#22c55e" },
+      valentine: { emoji: "❤️", bg: "#fecaca", btn: "#f87171" },
+      easter: { emoji: "🐰", bg: "#fbcfe8", btn: "#f472b6" },
+      summer: { emoji: "☀️", bg: "#fef9c3", btn: "#facc15" },
+      winter: { emoji: "❄️", bg: "#e0f2fe", btn: "#3b82f6" },
+
+      // Fun & Learning
+      space: { emoji: "🌌", bg: "#dbeafe", btn: "#3b82f6" },
+      colors: { emoji: "🌈", bg: "#fef9c3", btn: "#facc15" },
+      shapes: { emoji: "🔺", bg: "#fde68a", btn: "#f59e0b" },
+      numbers: { emoji: "🔢", bg: "#bbf7d0", btn: "#22c55e" },
+      letters: { emoji: "🅰️", bg: "#fbcfe8", btn: "#f472b6" },
+      food: { emoji: "🍎", bg: "#fecaca", btn: "#f87171" },
+
+      // Miscellaneous & Interests
+      superheroes: { emoji: "🦸‍♂️", bg: "#dbeafe", btn: "#3b82f6" },
+      vehicles: { emoji: "🚗", bg: "#fef9c3", btn: "#facc15" },
+      pirates: { emoji: "🏴‍☠️", bg: "#fca5a5", btn: "#f87171" },
+      fairy_tales: { emoji: "🧚‍♀️", bg: "#fbcfe8", btn: "#f472b6" },
+      ocean_beach: { emoji: "🏖️", bg: "#bfdbfe", btn: "#3b82f6" },
+
+      // Video games
+      mario: { emoji: "🍄", bg: "#fde68a", btn: "#f59e0b" },
+      pokemon: { emoji: "⚡", bg: "#bfdbfe", btn: "#3b82f6" },
+      minecraft: { emoji: "⛏️", bg: "#bbf7d0", btn: "#22c55e" },
+      roblox: { emoji: "🛠️", bg: "#fbcfe8", btn: "#f472b6" },
+
+      // Default
+      general: { emoji: "🎉", bg: "#e0e7ff", btn: "#6366f1" }
+    };
+
+    function getThemeByDate() {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      if (month === 10) return 'halloween';
+      if (month === 12) return 'christmas';
+      if (month >= 6 && month <= 8) return 'summer';
+      if (month === 2) return 'valentine';
+      return 'general';
+    }
+
+    async function loadQuestions(theme) {
+      try {
+        const res = await fetch(`questions_${theme}.json`);
+        const data = await res.json();
+        questions = data.questions;
+        const style = themeStyles[theme] || themeStyles['general'];
+        document.body.style.backgroundColor = style.bg;
+        gameTitle.textContent = `${style.emoji} ${data.title || "Kids Trivia!"}`;
+        score = 0;
+        currentIndex = 0;
+        scoreDisplay.textContent = "";
+        loadQuestion();
+      } catch (err) {
+        console.error("Failed to load questions:", err);
+        questionText.textContent = "❌ Failed to load questions.";
+        answersContainer.innerHTML = "";
+      }
+    }
+
+    function loadQuestion() {
+      const q = questions[currentIndex];
+      const style = themeStyles[themeSelect.value || getThemeByDate()] || themeStyles['general'];
+      questionText.textContent = q.question;
+
+      if (q.image) {
+        questionImg.src = q.image;
+        questionImg.classList.remove("hidden");
+      } else {
+        questionImg.classList.add("hidden");
+      }
+
+      answersContainer.innerHTML = "";
+      q.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.className = "answer-btn px-4 py-2 rounded-lg";
+        btn.style.backgroundColor = style.btn;
+        btn.onclick = () => checkAnswer(option);
+        answersContainer.appendChild(btn);
+      });
+
+      nextBtn.classList.add("hidden");
+    }
+
+    function checkAnswer(selected) {
+      const correct = questions[currentIndex].answer;
+      if (selected === correct) {
+        score++;
+        alert("Correct! 🎉");
+      } else {
+        alert(`Oops! The correct answer was ${correct}.`);
+      }
+
+      scoreDisplay.textContent = `Score: ${score} / ${questions.length}`;
+      nextBtn.classList.remove("hidden");
+      Array.from(answersContainer.children).forEach(btn => btn.disabled = true);
+    }
+
+    nextBtn.onclick = () => {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        loadQuestion();
+      } else {
+        questionText.textContent = "🎉 Quiz Complete! 🎉";
+        answersContainer.innerHTML = "";
+        nextBtn.classList.add("hidden");
+      }
+    }
+
+    themeSelect.addEventListener("change", () => {
+      const selectedTheme = themeSelect.value || getThemeByDate();
+      loadQuestions(selectedTheme);
+    });
+
+    const currentTheme = getThemeByDate();
+    loadQuestions(currentTheme);
+
+  </script>
+</body>
+</html>
